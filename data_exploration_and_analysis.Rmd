@@ -24,6 +24,9 @@ tumour_grades_2018 <- read_csv(here("clean_data/raw_data_tumour_grades.csv"))
 prevalence <- read_csv(here("clean_data/scotland_cancer_prevalence_2017.csv"))  
 ```
 
+Plotting the number of cases of malignant brain cancer in England from 2008 to 
+2017 to get an understanding of the trend. 
+
 ```{r} 
 #This data is only for malignant brain tumours. For this reason the comparison graph below for Scotland is also only showing recorded malignant brain tumours. 
 england_newly_diagnosed_cases %>% 
@@ -36,6 +39,8 @@ england_newly_diagnosed_cases %>%
   xlab("Year") + 
   ylab("Number of Cases") 
 ```
+
+Plotting the same graph but for Scottish data to see how the two compare. 
 
 ```{r}
 scotland_incidences_all_ages <- incidences %>% 
@@ -54,6 +59,8 @@ scotland_incidences_all_ages %>%
   ylab("Number of Cases") 
 ```
 
+Identifying the number of cases diagnosed each day from 1993 to 2017. 
+
 I decided to find the mean number of incidences of non-malignant brain tumours 
 in order to impute the missing values with it. According to Wu, Khorshidi, 
 Aickelin, Edib and Peate (2019), simple mean mutation is a better method of 
@@ -71,13 +78,22 @@ incidences %>%
 ```
 
 
+
 ```{r} 
 scotland_incidences_all_types <- incidences %>% 
   filter(hb_label == "SCOTLAND") %>% 
   filter(age_label == "Number of registrations: All Ages") %>% 
-  filter(site_label == c("Malignant brain cancer", "Malignant brain cancer (incl pituitary   gland, craniopharyngeal duct and pineal gland)", "Non-malignant brain cancer (incl pituitary gland, craniopharyngeal duct and pineal gland)")) %>% 
-  filter(sex_label == "All Persons") 
- 
+  filter(sex_label == "All Persons") %>% 
+  filter(site_label != "All brain and CNS tumours (malignant and non-malignant)") %>% 
+  mutate(incidence_no_and_rates = coalesce(incidence_no_and_rates, 527, na.rm = TRUE)) 
+
+scotland_incidences_all_types %>% 
+  group_by(year, site_label) %>% 
+  summarise(total = sum(incidence_no_and_rates)) 
+```
+
+
+```{r} 
 scotland_incidences_all_types %>% 
   group_by(year) %>% 
   select(incidence_no_and_rates) %>% 
