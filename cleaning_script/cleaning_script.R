@@ -24,10 +24,8 @@ cancer_incidences_clean <- cancer_incidences %>%
   pivot_longer(cols = 5:29, names_to = "year", 
                values_to = "incidence_no_and_rates") %>% 
   mutate(year = str_extract(string = year, pattern = "[19|20][0-9][0-9]{2}"))  
-  
-sum(is.na(cancer_incidences_clean)) 
 
-sum(is.na(cancer_incidences)) 
+write_csv(cancer_incidences_clean, "cancer_incidences_in_scotland.csv")
 
 cancer_mortality <- read_csv("raw_data/raw_data_cancer_mortality.csv") 
 
@@ -38,7 +36,9 @@ cancer_mortality_clean <- cancer_mortality %>%
   select(-c(id, hbnew, sitenew, sexnew, label)) %>% 
   pivot_longer(cols = 5:30, names_to = "year", 
                values_to = "incidence_no_and_rates") %>% 
-  mutate(year = str_extract(string = year, pattern = "[19|20][0-9][0-9]{2}"))  
+  mutate(year = str_extract(string = year, pattern = "[19|20][0-9][0-9]{2}")) 
+
+write_csv(cancer_mortality_clean, "cancer_mortality_in_scotland.csv")
 
 cancer_prevalence <- read_csv("raw_data/raw_data_cancer_prevalence.csv") 
 
@@ -53,6 +53,8 @@ cancer_prevalence_clean_2017 <- cancer_prevalence %>%
   rename(rate_population = stat.3) %>% 
   rename(percentage_in_time_or_age = stat.4) 
 
+write_csv(cancer_prevalence_clean_2017, "scotland_cancer_prevalence_2017.csv") 
+
 cancer_deprivation <- read_csv("raw_data/raw_data_cancer_deprivation.csv") %>% 
   janitor::clean_names() 
 
@@ -62,6 +64,8 @@ cancer_deprivation_clean <- cancer_deprivation %>%
                                                  "1=Most deprived" = "1", 
                                                  "5=Least deprived" = "5")) %>% 
   mutate(simd_2016_deprivation_quintile = as.factor(simd_2016_deprivation_quintile)) 
+
+write_csv(cancer_deprivation_clean, "cancer_by_simd_scotland.csv") 
 
 post_surgery_experiences_2018 <- readxl::read_xlsx("raw_data/raw_data_post_surgery_experience_2018.xlsx") 
 

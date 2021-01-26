@@ -1,0 +1,88 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse) 
+library(here) 
+
+#Incidence is across 2013 through 2017 and Mortality is across 2014 through 2018 
+simd <- read_csv(here("clean_data/cancer_by_simd_scotland.csv")) 
+
+incidences <- read_csv(here("clean_data/cancer_incidences_in_scotland.csv")) 
+
+mortality <- read_csv(here("clean_data/cancer_mortality_in_scotland.csv")) 
+
+#These diagnosed cases are only for malignant brain tumours (CID 71) 
+england_newly_diagnosed_cases <- read_csv(here("clean_data/newly_diagnosed_england.csv")) 
+
+post_surgery_experience_2018 <- readxl::read_xlsx(here("clean_data/raw_data_post_surgery_experience_2018.xlsx")) 
+
+tumour_grades_2018 <- read_csv(here("clean_data/raw_data_tumour_grades.csv")) 
+
+prevalence <- read_csv(here("clean_data/scotland_cancer_prevalence_2017.csv"))  
+```
+
+```{r} 
+#This data is only for malignant brain tumours. For this reason the comparison graph below for Scotland is also only showing recorded malignant brain tumours. 
+england_newly_diagnosed_cases %>% 
+  group_by(year, gender) %>% 
+  summarise(total = sum(raw_cases)) %>% 
+  ggplot(aes(year, total)) + 
+  geom_col() + 
+  scale_x_continuous(breaks = seq(2008, 2017, by = 1)) + 
+  ggtitle("Diagnosed Cases of malignant brain cancer in England (2008 - 2017)") + 
+  xlab("Year") + 
+  ylab("Number of Cases") 
+```
+
+```{r}
+scotland_incidences_all_ages <- incidences %>% 
+  filter(hb_label == "SCOTLAND") %>% 
+  filter(age_label == "Number of registrations: All Ages") %>% 
+  filter(site_label == "Malignant brain cancer") %>% 
+  filter(sex_label == "All Persons") %>% 
+  filter(year > 2007) 
+
+scotland_incidences_all_ages %>% 
+  ggplot(aes(year, incidence_no_and_rates)) + 
+  geom_col() + 
+  scale_x_continuous(breaks = seq(2008, 2017, by = 1)) + 
+  ggtitle("Diagnosed Cases of malignant brain cancer in Scotland (2008 - 2017)") + 
+  xlab("Year") + 
+  ylab("Number of Cases") 
+```
+
+I decided to find the mean number of incidences of non-malignant brain tumours 
+in order to impute the missing values with it. According to Wu, Khorshidi, 
+Aickelin, Edib and Peate (2019), simple mean mutation is a better method of 
+handling missing values than deletion when dealing with breast cancer 
+data. https://link.springer.com/article/10.1007/s13755-019-0082-4 
+
+```{r}
+incidences %>% 
+  filter(hb_label == "SCOTLAND") %>% 
+  filter(age_label == "Number of registrations: All Ages") %>% 
+  filter(site_label == "Non-malignant brain cancer (incl pituitary gland, craniopharyngeal duct and pineal gland)") %>% 
+  filter(sex_label == "All Persons") %>% 
+  drop_na() %>% 
+  summarise(mean_incidence = mean(incidence_no_and_rates)) 
+```
+
+
+```{r} 
+scotland_incidences_all_types <- incidences %>% 
+  filter(hb_label == "SCOTLAND") %>% 
+  filter(age_label == "Number of registrations: All Ages") %>% 
+  filter(site_label == c("Malignant brain cancer", "Malignant brain cancer (incl pituitary   gland, craniopharyngeal duct and pineal gland)", "Non-malignant brain cancer (incl pituitary gland, craniopharyngeal duct and pineal gland)")) %>% 
+  filter(sex_label == "All Persons") 
+ 
+scotland_incidences_all_types %>% 
+  group_by(year) %>% 
+  select(incidence_no_and_rates) %>% 
+  mutate(avg_diagnosed_per_day = incidence_no_and_rates / 365) %>% 
+  ggplot(aes(year, avg_diagnosed_per_day)) + 
+  geom_point() 
+```
+
