@@ -25,6 +25,8 @@ tumour_grades_2018 <- read_csv(here("clean_data/raw_data_tumour_grades.csv"))
 prevalence <- read_csv(here("clean_data/scotland_cancer_prevalence_2017.csv"))  
 
 updated_cancer_incidences <- read_csv(here("clean_data/more_recent_cancer_incidences.csv")) 
+
+survival_data <- read_csv(here("raw_data_cancer_survival.csv")) 
 ```
 
 #Comparing England and Scotland 
@@ -117,7 +119,7 @@ scotland_incidences_all_types %>%
   ggplot(aes(year, avg_diagnosed_per_day)) + 
   geom_point() + 
   geom_smooth(se = FALSE, color = "firebrick3") + 
-  scale_x_continuous(breaks = seq(1994, 2018, by = 1), ) + 
+  scale_x_continuous(breaks = seq(1994, 2018, by = 1)) + 
   labs(title = "Estimated Daily Diagnosis in Scotland from 1993 to 2017", 
        subtitle = "Malignant and non-malignant brain tumours") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 0.9)) + 
@@ -131,7 +133,7 @@ As of mid 2018, the Scottish population was 5,438,100 (National Records of
 Scotland, https://www.nrscotland.gov.uk/files/statistics/rgar/2018/rgar18.pdf). 
 The number of cases diagnosed in 2018 was 966. 
 
-The percentage of the Scottish population in 2018 diagnosed with a brain tumour was 0.02%. 
+The percentage of the Scottish population in 2018 diagnosed with a brain tumour was 0.018%. In 2000, the percentage of the population diagnosed with a brain tumour was 0.016%. The difference is pretty minor, but see above for a closer look at estimated daily cases of brain tumours from 1993 to 1997.  
 
 ```{r}
 updated_cancer_incidences %>% 
@@ -141,6 +143,95 @@ updated_cancer_incidences %>%
   filter(site_label == "All brain and CNS tumours (malignant and non-malignant)") %>% 
   filter(year == 2018) 
 
+updated_cancer_incidences %>% 
+  filter(hb_label == "SCOTLAND") %>% 
+  filter(age_label == "Number of registrations: All Ages") %>% 
+  filter(sex_label == "All Persons") %>% 
+  filter(site_label == "All brain and CNS tumours (malignant and non-malignant)") %>% 
+  filter(year == 2000) 
+
 966 / 5438100 * 100 
+
+807 / 5067000 * 100 
+```
+
+# Survival 
+
+Net survival is an estimate of the probability that the average patient will be alive at a given time after diagnosis, after controlling for other causes of death. 
+
+```{r}
+#Net survival of males aged from 15 to 99 at 1 and 5 years after the diagnosis. 
+survival_data %>% 
+  select(calendar_period_of_diagnosis, sex, age_group, years_since_diagnosis, 
+         net_survival_percent) %>% 
+  mutate(net_survival_percent = as.double(net_survival_percent)) %>%  
+  mutate(years_since_diagnosis = as.factor(years_since_diagnosis)) %>% 
+  filter(sex == "Male") %>% 
+  filter(calendar_period_of_diagnosis == "2013-2017" | 
+            calendar_period_of_diagnosis == "2008-2012") %>% 
+  filter(age_group == "15-99") %>% 
+  filter(years_since_diagnosis != 10) %>% 
+  ggplot(aes(years_since_diagnosis, net_survival_percent)) + 
+  geom_col() + 
+  facet_wrap(~ calendar_period_of_diagnosis) + 
+  labs(title = "Males Net Survival over 2008-2012 and 2013-2017", 
+       subtitle = "Estimated probablity of survival for 1 year and 5 years after diagnosis") + 
+  xlab("Years Since Diagnosis") + 
+  ylab("Net Survival (%)") + 
+  scale_y_continuous(breaks = seq(0, 50, by = 5))
+```
+
+```{r}
+#Net survival of females aged from 15 to 99 at 1 and 5 years after the diagnosis. 
+survival_data %>% 
+  select(calendar_period_of_diagnosis, sex, age_group, years_since_diagnosis, net_survival_percent) %>% 
+  mutate(net_survival_percent = as.double(net_survival_percent)) %>%  
+  mutate(years_since_diagnosis = as.factor(years_since_diagnosis)) %>% 
+  filter(sex == "Female") %>% 
+  filter(calendar_period_of_diagnosis == "2013-2017" | 
+            calendar_period_of_diagnosis == "2008-2012") %>% 
+  filter(age_group == "15-99") %>% 
+  filter(years_since_diagnosis != 10) %>% 
+  ggplot(aes(years_since_diagnosis, net_survival_percent)) + 
+  geom_col() + 
+  facet_wrap(~ calendar_period_of_diagnosis) + 
+  labs(title = "Females Net Survival over 2008-2012 and 2013-2017", 
+       subtitle = "Estimated probablity of survival for 1 year and 5 years after diagnosis") + 
+  xlab("Years Since Diagnosis") + 
+  ylab("Net Survival (%)") + 
+  scale_y_continuous(breaks = seq(0, 50, by = 5)) 
+```
+
+```{r}
+#Deaths within 10 years 
+survival_data %>% 
+  select(sex, age_group, years_since_diagnosis, deaths_within_10_years, calendar_period_of_diagnosis) %>% 
+  filter(years_since_diagnosis == 1) %>% 
+  filter(calendar_period_of_diagnosis == "2008-2012" 
+         | calendar_period_of_diagnosis ==  "2013-2017") %>% 
+  filter(age_group == "15-44" | age_group == "45-54" | age_group == "55-64" | 
+          age_group == "65-74" | age_group == "75-99") %>% 
+  ggplot(aes(calendar_period_of_diagnosis, deaths_within_10_years)) + 
+  geom_col() + 
+  labs(title = "Deaths within 10 years of a diagnosis of brain and CNS cancer", 
+       subtitle = "Over the period of 2008 to 2017") + 
+  xlab("Period of Diagnosis") + 
+  ylab("Number of Deaths within 10 years") 
+```
+
+# Mortality 
+
+```{r}
+mortality %>% 
+  filter(site_label == "Malignant brain cancer (incl pituitary gland, craniopharyngeal duct and pineal gland)") %>% 
+  filter(sex_label == "All Persons") %>% 
+  filter(age_label == "Number of deaths: All Ages") %>% 
+  filter(hb_label != "SCOTLAND") %>% 
+  ggplot(aes(hb_label, incidence_no_and_rates)) + 
+  geom_col() + 
+  labs(title = "Yearly Deaths from Brain and CNS Cancer by Health Board", 
+       subtitle = "1993 to 1999") + 
+  xlab("Health Board") + 
+  ylab("Number of Deaths") 
 ```
 

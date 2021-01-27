@@ -2,8 +2,6 @@ library(tidyverse)
 
 cancer_incidences <- read_csv("raw_data/raw_data_cancer_incidences.csv") 
 
-glimpse(cancer_incidences_clean) 
-
 #Converting the data into a clean format - coercing the raw number of cases and 
 #crude rate from 1993 to 1998 into doubles, dropping unnecessary columns, 
 #pivoting the data into a long format and extracting the year from the 
@@ -29,8 +27,6 @@ write_csv(cancer_incidences_clean, "cancer_incidences_in_scotland.csv")
 
 cancer_mortality <- read_csv("raw_data/raw_data_cancer_mortality.csv") 
 
-glimpse(cancer_mortality) 
-
 #Following the same cleaning process as above. 
 cancer_mortality_clean <- cancer_mortality %>% 
   select(-c(id, hbnew, sitenew, sexnew, label)) %>% 
@@ -41,8 +37,6 @@ cancer_mortality_clean <- cancer_mortality %>%
 write_csv(cancer_mortality_clean, "cancer_mortality_in_scotland.csv")
 
 cancer_prevalence <- read_csv("raw_data/raw_data_cancer_prevalence.csv") 
-
-glimpse(cancer_prevalence) 
 
 #Giving the variables more informative names. 
 cancer_prevalence_clean_2017 <- cancer_prevalence %>% 
@@ -104,9 +98,12 @@ cancer_survival_clean <- survival_data %>%
             lower_95_percent_ci_for_observed_survival, 
             upper_95_percent_ci_for_observed_survival, 
             lower_95_percent_ci_for_net_survival, 
-            upper_95_percent_ci_for_net_survival)) %>% 
+            upper_95_percent_ci_for_net_survival)) %>%  
   mutate(cancer_site_grouping = 
            recode(cancer_site_grouping, 
                   "Brain and other CNS (ICD-9 191-192; ICD-10 C70-C72, C75.1-C75.3)" = 
-                    "Brain and other CNS Cancer")) 
+                    "Brain and other CNS Cancer")) %>% 
+  mutate(observed_survival_percent = as.double(observed_survival_percent)) 
+
+write_csv(cancer_survival_clean, "raw_data_cancer_survival.csv") 
 
