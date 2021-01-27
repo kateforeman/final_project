@@ -72,3 +72,41 @@ post_surgery_experiences_2018 <- readxl::read_xlsx("raw_data/raw_data_post_surge
 tumour_reports_in_2018 <- read_csv("raw_data/raw_data_tumour_grades.csv") 
 
 england_reports_new_cases <- read_csv("raw_data/newly_diagnosed_england.csv") 
+
+updated_cancer_incidences <- read_csv("raw_data/updated_cancer_incidences_2018.csv") 
+
+updated_cancer_incidences_clean <- updated_cancer_incidences %>% 
+  select(-c(id, id_1, id_3, id_5, id_7)) %>% 
+  rename(hb_label = id_2) %>% 
+  rename(site_label = id_4) %>% 
+  rename(sex_label = id_6) %>% 
+  rename(age_label = id_8) %>% 
+  rename(trans1.1994 = id_9) %>% 
+  mutate(trans1.1994 = as.double(trans1.1994)) %>% 
+  mutate(trans1.1995 = as.double(trans1.1995)) %>% 
+  mutate(trans1.1996 = as.double(trans1.1996)) %>% 
+  mutate(trans1.1997 = as.double(trans1.1997)) %>% 
+  mutate(trans1.1998 = as.double(trans1.1998)) %>% 
+  mutate(trans1.1999 = as.double(trans1.1999)) %>% 
+  pivot_longer(cols = 5:29, names_to = "year", 
+               values_to = "incidence_no_and_rates") %>% 
+  mutate(year = str_extract(string = year, pattern = "[19|20][0-9][0-9]{2}")) 
+
+write_csv(updated_cancer_incidences_clean, "more_recent_cancer_incidences.csv")
+
+survival_data <- read_csv("raw_data/raw_data_survival_recent.csv") %>% 
+  janitor::clean_names() 
+
+survival_data 
+
+cancer_survival_clean <- survival_data %>% 
+  select(-c(patients_remaining_at_risk_at_timepoint_t, 
+            lower_95_percent_ci_for_observed_survival, 
+            upper_95_percent_ci_for_observed_survival, 
+            lower_95_percent_ci_for_net_survival, 
+            upper_95_percent_ci_for_net_survival)) %>% 
+  mutate(cancer_site_grouping = 
+           recode(cancer_site_grouping, 
+                  "Brain and other CNS (ICD-9 191-192; ICD-10 C70-C72, C75.1-C75.3)" = 
+                    "Brain and other CNS Cancer")) 
+
