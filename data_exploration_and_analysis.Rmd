@@ -27,6 +27,8 @@ prevalence <- read_csv(here("clean_data/scotland_cancer_prevalence_2017.csv"))
 updated_cancer_incidences <- read_csv(here("clean_data/more_recent_cancer_incidences.csv")) 
 
 survival_data <- read_csv(here("raw_data_cancer_survival.csv")) 
+
+survival_leukaemia_clean <- read_csv("survival_leukaemia_clean.csv") 
 ```
 
 #Comparing England and Scotland 
@@ -155,9 +157,35 @@ updated_cancer_incidences %>%
 807 / 5067000 * 100 
 ```
 
+# Age Demographic Cancer Incidence 
+
+```{r}
+updated_cancer_incidences %>% 
+  filter(age_label == "Number of registrations: Under 5" | age_label ==  "Number of registrations: 5.." | age_label == "Number of registrations: 10-14" | age_label ==  "Number of registrations: 15-19" | age_label == "Number of registrations: 20-24" | age_label ==  "Number of registrations: 25-29" | age_label == "Number of registrations: 30-34" | age_label ==  "Number of registrations: 35-39"| age_label ==  "Number of registrations: 40-44" | age_label ==  "Number of registrations: 45-49" | age_label ==  "Number of registrations: 50-54" | age_label ==  "Number of registrations: 55-59" | age_label ==  "Number of registrations: 60-64" | age_label == "Number of registrations: 65-69" | age_label ==  "Number of registrations: 70-74" | age_label == "Number of registrations: 75-79" | age_label == "Number of registrations: 80x4" | age_label ==  "Number of registrations: 85x9" | age_label ==  "Number of registrations: 90+") %>% 
+  filter(sex_label == "All Persons") %>% 
+  filter(hb_label == "SCOTLAND") %>% 
+  filter(site_label == "All brain and CNS tumours (malignant and non-malignant)") %>% 
+  filter(year == 2017) %>% 
+  arrange(year) %>% 
+  ggplot(aes(age_label, incidence_no_and_rates)) + 
+  geom_col() 
+```
+
+
 # Survival 
 
-Net survival is an estimate of the probability that the average patient will be alive at a given time after diagnosis, after controlling for other causes of death. 
+Net survival is an estimate of the probability that the average patient will be
+alive at a given time after diagnosis, after controlling for other causes
+of death. 
+
+£15038718 spent on Brain cancer research in 2018/2019 (6.55%)
+£35439980 spent on Leukaemia research in 2018/2019 (15.43%) 
+
+In 2012/2013, only £6 million was spent on Brain cancer research. The allocated
+budget for brain tumour research is growing, but there is still a bridge to gap 
+between this region and research into other cancers. This may be an important 
+factor in reducing the preventable deaths that still occur for those
+diagnosed with a brain tumour. 
 
 ```{r}
 #Net survival of males aged from 15 to 99 at 1 and 5 years after the diagnosis. 
@@ -174,7 +202,7 @@ survival_data %>%
   ggplot(aes(years_since_diagnosis, net_survival_percent)) + 
   geom_col() + 
   facet_wrap(~ calendar_period_of_diagnosis) + 
-  labs(title = "Males Net Survival over 2008-2012 and 2013-2017", 
+  labs(title = "Brain and CNS Tumour Net Survival over 2008-2012 and 2013-2017 (Male)", 
        subtitle = "Estimated probablity of survival for 1 year and 5 years after diagnosis") + 
   xlab("Years Since Diagnosis") + 
   ylab("Net Survival (%)") + 
@@ -195,12 +223,61 @@ survival_data %>%
   ggplot(aes(years_since_diagnosis, net_survival_percent)) + 
   geom_col() + 
   facet_wrap(~ calendar_period_of_diagnosis) + 
-  labs(title = "Females Net Survival over 2008-2012 and 2013-2017", 
+  labs(title = "Brain and CNS Tumour Net Survival over 2008-2012 and 2013-2017 (Female)", 
        subtitle = "Estimated probablity of survival for 1 year and 5 years after diagnosis") + 
   xlab("Years Since Diagnosis") + 
   ylab("Net Survival (%)") + 
   scale_y_continuous(breaks = seq(0, 50, by = 5)) 
 ```
+
+```{r}
+survival_leukaemia_clean %>% 
+  select(calendar_period_of_diagnosis, sex, age_group, years_since_diagnosis, 
+         net_survival_percent) %>% 
+  mutate(net_survival_percent = as.double(net_survival_percent)) %>%  
+  mutate(years_since_diagnosis = as.factor(years_since_diagnosis)) %>% 
+  filter(sex == "Male") %>% 
+  filter(calendar_period_of_diagnosis == "2013-2017" | 
+            calendar_period_of_diagnosis == "2008-2012") %>% 
+  filter(age_group == "15-99") %>% 
+  filter(years_since_diagnosis != 10) %>% 
+  ggplot(aes(years_since_diagnosis, net_survival_percent)) + 
+  geom_col() + 
+  facet_wrap(~ calendar_period_of_diagnosis) + 
+  labs(title = "Leukaemia Net Survival over 2008-2012 and 2013-2017 (Male)", 
+       subtitle = "Estimated probablity of survival for 1 year and 5 years after diagnosis") + 
+  xlab("Years Since Diagnosis") + 
+  ylab("Net Survival (%)") + 
+  scale_y_continuous(breaks = seq(0, 85, by = 5)) 
+```
+
+```{r}
+survival_leukaemia_clean %>% 
+  select(calendar_period_of_diagnosis, sex, age_group, years_since_diagnosis, 
+         net_survival_percent) %>% 
+  mutate(net_survival_percent = as.double(net_survival_percent)) %>%  
+  mutate(years_since_diagnosis = as.factor(years_since_diagnosis)) %>% 
+  filter(sex == "Female") %>% 
+  filter(calendar_period_of_diagnosis == "2013-2017" | 
+            calendar_period_of_diagnosis == "2008-2012") %>% 
+  filter(age_group == "15-99") %>% 
+  filter(years_since_diagnosis != 10) %>% 
+  ggplot(aes(years_since_diagnosis, net_survival_percent)) + 
+  geom_col() + 
+  facet_wrap(~ calendar_period_of_diagnosis) + 
+  labs(title = "Leukaemia Net Survival over 2008-2012 and 2013-2017 (Female)", 
+       subtitle = "Estimated probablity of survival for 1 year and 5 years after diagnosis") + 
+  xlab("Years Since Diagnosis") + 
+  ylab("Net Survival (%)") + 
+  scale_y_continuous(breaks = seq(0, 85, by = 5)) 
+```
+
+There was missing data in the 10 year survival rates of brain tumours, 
+however there is data for the number of deaths within 10 years of a diagnosis 
+of brain cancer. The number of deaths decreased slightly in the 2013-2017 
+grouping when compared to the 2008-2012 grouping, suggesting more people 
+are surviving brain cancer for longer. This graph also indicates the number of 
+deaths within 10 years occur mostly within those aged over 54.  
 
 ```{r}
 #Deaths within 10 years 
@@ -211,7 +288,7 @@ survival_data %>%
          | calendar_period_of_diagnosis ==  "2013-2017") %>% 
   filter(age_group == "15-44" | age_group == "45-54" | age_group == "55-64" | 
           age_group == "65-74" | age_group == "75-99") %>% 
-  ggplot(aes(calendar_period_of_diagnosis, deaths_within_10_years)) + 
+  ggplot(aes(calendar_period_of_diagnosis, deaths_within_10_years, fill = age_group)) + 
   geom_col() + 
   labs(title = "Deaths within 10 years of a diagnosis of brain and CNS cancer", 
        subtitle = "Over the period of 2008 to 2017") + 
@@ -229,9 +306,10 @@ mortality %>%
   filter(hb_label != "SCOTLAND") %>% 
   ggplot(aes(hb_label, incidence_no_and_rates)) + 
   geom_col() + 
-  labs(title = "Yearly Deaths from Brain and CNS Cancer by Health Board", 
-       subtitle = "1993 to 1999") + 
+  labs(title = "Total Deaths from Brain and CNS Cancer by Health Board", 
+       subtitle = "Data gathered across 1993 to 2017") + 
   xlab("Health Board") + 
-  ylab("Number of Deaths") 
+  ylab("Number of Deaths") + 
+  theme(axis.text.x = element_text(angle = 30, hjust = 0.9)) 
 ```
 

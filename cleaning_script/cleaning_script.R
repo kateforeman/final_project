@@ -107,3 +107,19 @@ cancer_survival_clean <- survival_data %>%
 
 write_csv(cancer_survival_clean, "raw_data_cancer_survival.csv") 
 
+survival_leukaemia <- read_csv("raw_data/raw_data_survival_leukemia .csv") %>% 
+  janitor::clean_names() 
+
+survival_leukaemia_clean <- survival_leukaemia %>% 
+  select(-c(patients_remaining_at_risk_at_timepoint_t, 
+            lower_95_percent_ci_for_observed_survival, 
+            upper_95_percent_ci_for_observed_survival, 
+            lower_95_percent_ci_for_net_survival, 
+            upper_95_percent_ci_for_net_survival)) %>%  
+  mutate(cancer_site_grouping = recode(cancer_site_grouping, 
+         "Leukaemias (ICD-9 204-208; ICD-10 C91-C95)" = 
+         "Leukaemias")) %>% 
+  mutate(observed_survival_percent = as.double(observed_survival_percent)) %>% 
+  mutate(net_survival_percent = as.double(net_survival_percent)) 
+
+write_csv(survival_leukaemia_clean, "survival_leukaemia_clean.csv")
