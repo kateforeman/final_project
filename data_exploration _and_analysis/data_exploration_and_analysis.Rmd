@@ -28,8 +28,10 @@ updated_cancer_incidences <- read_csv(here("clean_data/more_recent_cancer_incide
 
 survival_data <- read_csv(here("raw_data_cancer_survival.csv")) 
 
-survival_leukaemia_clean <- read_csv("survival_leukaemia_clean.csv") 
+survival_leukaemia_clean <- read_csv(here("survival_leukaemia_clean.csv")) 
 ```
+
+Themes for the graphs. 
 
 ```{r}
 title.theme <- element_text(colour = "brown3", size = 14, face = "bold")
@@ -265,10 +267,14 @@ between this region and research into other cancers. This may be an important
 factor in reducing the preventable deaths that still occur for those
 diagnosed with a brain tumour. 
 
+```{r}
+joined <- full_join(survival_data, survival_leukaemia) 
+```
+
 
 ```{r}
 #Net survival of males aged from 15 to 99 at 1 and 5 years after the diagnosis. 
-survival_data %>% 
+joined %>% 
   select(cancer_site_grouping, calendar_period_of_diagnosis, sex, age_group, years_since_diagnosis, 
          net_survival_percent) %>% 
   mutate(net_survival_percent = as.double(net_survival_percent)) %>%  
@@ -278,11 +284,10 @@ survival_data %>%
             calendar_period_of_diagnosis == "2008-2012") %>% 
   filter(age_group == "15-99") %>% 
   filter(years_since_diagnosis != 10) %>% 
-  filter(cancer_site_grouping == "Brain and other CNS Cancer") %>% 
-  ggplot(aes(years_since_diagnosis, net_survival_percent)) + 
-  geom_col() + 
+  ggplot(aes(years_since_diagnosis, net_survival_percent, fill = cancer_site_grouping)) + 
+  geom_bar(stat= "identity", position = "dodge") + 
   facet_wrap(~ calendar_period_of_diagnosis) + 
-  labs(title = "Brain and CNS Tumour Net Survival over 2008-2012 and 2013-2017 (Male)", 
+  labs(title = "Brain and CNS Tumour and Leukaemia Net Survival over 2008-2012 and 2013-2017 (Male)", 
        subtitle = "Estimated probablity of survival for 1 year and 5 years after diagnosis") + 
   xlab("Years Since Diagnosis") + 
   ylab("Net Survival (%)") + 
@@ -294,8 +299,8 @@ survival_data %>%
 
 ```{r}
 #Net survival of females aged from 15 to 99 at 1 and 5 years after the diagnosis. 
-survival_data %>% 
-  select(calendar_period_of_diagnosis, sex, age_group, years_since_diagnosis, net_survival_percent) %>% 
+joined %>% 
+  select(cancer_site_grouping, calendar_period_of_diagnosis, sex, age_group, years_since_diagnosis, net_survival_percent) %>% 
   mutate(net_survival_percent = as.double(net_survival_percent)) %>%  
   mutate(years_since_diagnosis = as.factor(years_since_diagnosis)) %>% 
   filter(sex == "Female") %>% 
@@ -303,70 +308,19 @@ survival_data %>%
             calendar_period_of_diagnosis == "2008-2012") %>% 
   filter(age_group == "15-99") %>% 
   filter(years_since_diagnosis != 10) %>% 
-  ggplot(aes(years_since_diagnosis, net_survival_percent)) + 
-  geom_col() + 
+  ggplot(aes(years_since_diagnosis, net_survival_percent, fill = cancer_site_grouping)) + 
+  geom_bar(stat= "identity", position = "dodge") + 
   facet_wrap(~ calendar_period_of_diagnosis) + 
   labs(title = "Brain and CNS Tumour Net Survival over 2008-2012 and 2013-2017 (Female)", 
        subtitle = "Estimated probablity of survival for 1 year and 5 years after diagnosis") + 
   xlab("Years Since Diagnosis") + 
   ylab("Net Survival (%)") + 
-  scale_y_continuous(breaks = seq(0, 50, by = 5)) + 
+  scale_y_continuous(breaks = seq(0, 100, by = 5)) + 
   theme(
   plot.title = title.theme, 
   plot.subtitle = subtitle.theme, 
   axis.title = x.axis.theme) 
 ```
-
-```{r}
-survival_leukaemia_clean %>% 
-  select(calendar_period_of_diagnosis, sex, age_group, years_since_diagnosis, 
-         net_survival_percent) %>% 
-  mutate(net_survival_percent = as.double(net_survival_percent)) %>%  
-  mutate(years_since_diagnosis = as.factor(years_since_diagnosis)) %>% 
-  filter(sex == "Male") %>% 
-  filter(calendar_period_of_diagnosis == "2013-2017" | 
-            calendar_period_of_diagnosis == "2008-2012") %>% 
-  filter(age_group == "15-99") %>% 
-  filter(years_since_diagnosis != 10) %>% 
-  ggplot(aes(years_since_diagnosis, net_survival_percent)) + 
-  geom_col() + 
-  facet_wrap(~ calendar_period_of_diagnosis) + 
-  labs(title = "Leukaemia Net Survival over 2008-2012 and 2013-2017 (Male)", 
-       subtitle = "Estimated probablity of survival for 1 year and 5 years after diagnosis") + 
-  xlab("Years Since Diagnosis") + 
-  ylab("Net Survival (%)") + 
-  scale_y_continuous(breaks = seq(0, 85, by = 5)) + 
-  theme(
-  plot.title = title.theme, 
-  plot.subtitle = subtitle.theme, 
-  axis.title = x.axis.theme) 
-```
-
-```{r}
-survival_leukaemia_clean %>% 
-  select(calendar_period_of_diagnosis, sex, age_group, years_since_diagnosis, 
-         net_survival_percent) %>% 
-  mutate(net_survival_percent = as.double(net_survival_percent)) %>%  
-  mutate(years_since_diagnosis = as.factor(years_since_diagnosis)) %>% 
-  filter(sex == "Female") %>% 
-  filter(calendar_period_of_diagnosis == "2013-2017" | 
-            calendar_period_of_diagnosis == "2008-2012") %>% 
-  filter(age_group == "15-99") %>% 
-  filter(years_since_diagnosis != 10) %>% 
-  ggplot(aes(years_since_diagnosis, net_survival_percent)) + 
-  geom_col() + 
-  facet_wrap(~ calendar_period_of_diagnosis) + 
-  labs(title = "Leukaemia Net Survival over 2008-2012 and 2013-2017 (Female)", 
-       subtitle = "Estimated probablity of survival for 1 year and 5 years after diagnosis") + 
-  xlab("Years Since Diagnosis") + 
-  ylab("Net Survival (%)") + 
-  scale_y_continuous(breaks = seq(0, 85, by = 5)) + 
-  theme(
-  plot.title = title.theme, 
-  plot.subtitle = subtitle.theme, 
-  axis.title = x.axis.theme) 
-```
-
 There was missing data in the 10 year survival rates of brain tumours, 
 however there is data for the number of deaths within 10 years of a diagnosis 
 of brain cancer. The number of deaths decreased slightly in the 2013-2017 
@@ -510,6 +464,36 @@ simd %>%
   ylab("Rate of Mortality") + 
   labs(title = "Mortality Rates by SIMD Deprivation Quintile", subtitle = 
          "2014-2018") + 
+  theme(
+  plot.title = title.theme, 
+  plot.subtitle = subtitle.theme, 
+  axis.title = x.axis.theme) 
+```
+
+# Patient Experiences 
+
+In 2018, the Scottish Adult Neuro-Oncology Network published an audit with some 
+statistics regarding patient experience. The target for 30 day mortality rate 
+is below 5%. The only region to be over the target was Aberdeen at 9.8%. After 
+surgery, imaging should be done within 3 days to measure surgical performance 
+and determine necessary treatment. The target is 90%, however both Aberdeen 
+and Dundee were under this 90% target. 
+
+```{r}
+library(reshape2)
+
+post_surgery_experience_2018 %>% 
+  pivot_longer(cols = c(proportion_of_patients_die_within_30_days_of_surgery, proportion_of_patients_imaging_within_72_hours), names_to = "surgery_aftermaths", 
+               values_to = "proportion") %>% 
+  mutate(surgery_aftermaths = recode(surgery_aftermaths, "proportion_of_patients_die_within_30_days_of_surgery" = "Percentage of patients dying within 30 days", 
+"proportion_of_patients_imaging_within_72_hours" = "Percentage of patients recieving brain imaging within 30 days")) %>% 
+  ggplot(aes(location, proportion, fill = surgery_aftermaths)) + 
+  geom_bar(stat= "identity", position = "dodge") + 
+  guides(fill = guide_legend(title = "Surgery Aftermath")) + 
+  labs(title = "Surgery Aftermath by Location", 
+       subtitle = "2018") + 
+  xlab("Region") + 
+  ylab("Percentage of Patients") + 
   theme(
   plot.title = title.theme, 
   plot.subtitle = subtitle.theme, 
