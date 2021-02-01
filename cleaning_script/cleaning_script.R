@@ -103,7 +103,8 @@ cancer_survival_clean <- survival_data %>%
            recode(cancer_site_grouping, 
                   "Brain and other CNS (ICD-9 191-192; ICD-10 C70-C72, C75.1-C75.3)" = 
                     "Brain and other CNS Cancer")) %>% 
-  mutate(observed_survival_percent = as.double(observed_survival_percent)) 
+  mutate(observed_survival_percent = as.double(observed_survival_percent)) %>% 
+  mutate(net_survival_percent = as.double(net_survival_percent)) 
 
 write_csv(cancer_survival_clean, "raw_data_cancer_survival.csv") 
 
@@ -122,4 +123,4 @@ survival_leukaemia_clean <- survival_leukaemia %>%
   mutate(observed_survival_percent = as.double(observed_survival_percent)) %>% 
   mutate(net_survival_percent = as.double(net_survival_percent)) 
 
-write_csv(survival_leukaemia_clean, "survival_leukaemia_clean.csv")
+write_csv(survival_leukaemia_clean, "survival_leukaemia_clean.csv") 
