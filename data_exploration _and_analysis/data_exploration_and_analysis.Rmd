@@ -45,23 +45,52 @@ x.axis.theme <- element_text(face = "bold.italic")
 Plotting the number of cases of malignant brain cancer in England from 2008 to 
 2017 to get an understanding of the trend. 
 
+```{r}
+incidences_joined <- england_newly_diagnosed_cases %>% 
+  mutate(hb_label = "England") %>% 
+  mutate(sex_label = gender) %>% 
+  select(-gender) %>% 
+  mutate(incidence_no_and_rates = raw_cases) %>% 
+  full_join(scotland_incidences_all_ages) %>% 
+  mutate(hb_label = recode(hb_label, "SCOTLAND" = "Scotland")) 
+
+incidences_joined %>% 
+  group_by(year) %>% 
+  summarise(total = incidence_no_and_rates) 
+
+2654 + 1914 
+
+267 + 199 
+```
+
+
 ```{r} 
 #This data is only for malignant brain tumours. For this reason the comparison graph below for Scotland is also only showing recorded malignant brain tumours. 
-england_newly_diagnosed_cases %>% 
-  group_by(year, gender) %>% 
-  summarise(total = sum(raw_cases)) %>% 
-  ggplot(aes(year, total)) + 
+incidences_joined %>% 
+  group_by(year, sex_label, hb_label) %>% 
+  summarise(total = sum(incidence_no_and_rates)) %>% 
+  filter(hb_label == "Scotland" | hb_label == "England") %>% 
+  ggplot(aes(year, total, fill = sex_label)) + 
   geom_col() + 
   scale_x_continuous(breaks = seq(2008, 2017, by = 1)) + 
-  labs(title = "Diagnosed Cases of malignant brain cancer in England", 
+  labs(title = "Diagnosed Cases of malignant brain cancer in England and Scotland", 
        subtitle = "2008-2017") + 
   xlab("Year") + 
   ylab("Number of Cases") + 
   theme(
   plot.title = title.theme, 
   plot.subtitle = subtitle.theme, 
-  axis.title = x.axis.theme)
+  axis.title = x.axis.theme) + 
+  scale_fill_manual(values = c("palevioletred4", "cadetblue3")) + 
+  guides(fill = guide_legend(title = "Sex")) + 
+  facet_grid(~ hb_label) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 0.9)) 
 ```
+
+```{r}
+ggsave("diagnosed_cases_in_eng.png", plot = last_plot())  
+```
+
 
 Plotting the same graph but for Scottish data to see how the two compare. 
 
@@ -69,12 +98,12 @@ Plotting the same graph but for Scottish data to see how the two compare.
 scotland_incidences_all_ages <- incidences %>% 
   filter(hb_label == "SCOTLAND") %>% 
   filter(age_label == "Number of registrations: All Ages") %>% 
-  filter(site_label == "All brain and CNS tumours (malignant and non-malignant)") %>% 
-  filter(sex_label == "All Persons") %>% 
+  filter(site_label == "Malignant brain cancer (incl pituitary gland, craniopharyngeal duct and pineal gland)") %>% 
+  filter(sex_label == "Males" | sex_label == "Females") %>% 
   filter(year > 2007) 
 
 scotland_incidences_all_ages %>% 
-  ggplot(aes(year, incidence_no_and_rates)) + 
+  ggplot(aes(year, incidence_no_and_rates, fill = sex_label)) + 
   geom_col() + 
   scale_x_continuous(breaks = seq(2008, 2017, by = 1)) + 
   labs(title = "Diagnosed Cases of malignant brain cancer in Scotland", 
@@ -84,8 +113,15 @@ scotland_incidences_all_ages %>%
   theme(
   plot.title = title.theme, 
   plot.subtitle = subtitle.theme, 
-  axis.title = x.axis.theme) 
+  axis.title = x.axis.theme) + 
+  scale_fill_manual(values = c("palevioletred4", "cadetblue3")) + 
+  guides(fill = guide_legend(title = "Sex"))  
 ```
+
+```{r}
+ggsave("diagnosed_cases_in_scotland.png", plot = last_plot())  
+```
+
 
 # Daily Cases 
 
@@ -152,6 +188,30 @@ scotland_incidences_all_types %>%
   axis.title = x.axis.theme) 
 ```
 
+```{r}
+scotland_incidences_all_types %>% 
+  group_by(year) %>% 
+  summarise(total_cases = sum(incidence_no_and_rates)) %>% 
+  ggplot(aes(year, total_cases)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE, color = "brown3") + 
+  scale_x_continuous(breaks = seq(1994, 2018, by = 1)) + 
+  labs(title = "Malignant and Non-Malignant Tumour Diagnosis in Scotland", 
+       subtitle = "1993-2017") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 0.9)) + 
+  xlab("Year of Diagnosis") + 
+  ylab("Incidences Each Year") + 
+  theme(
+  plot.title = title.theme, 
+  plot.subtitle = subtitle.theme, 
+  axis.title = x.axis.theme) 
+```
+
+```{r}
+ggsave("diagnosis_of_all_tumours.png", plot = last_plot()) 
+```
+
+
 # Percentage of the Scottish population 
 
 As of mid 2018, the Scottish population was 5,438,100 (National Records of 
@@ -202,6 +262,10 @@ updated_cancer_incidences %>%
   axis.title = x.axis.theme) 
 ```
 
+```{r}
+ggsave("crude_rate_by_area_in_2017.png", last_plot()) 
+```
+
 
 ```{r}
 updated_cancer_incidences %>% 
@@ -212,17 +276,47 @@ updated_cancer_incidences %>%
   filter(hb_label != "South East of Scotland") %>% 
   filter(hb_label != "West of Scotland") %>% 
   filter(age_label == "Crude Rate (Incidence)") %>% 
-  filter(year == 2017) %>% 
+  filter(year == 2010) %>% 
   ggplot(aes(hb_label, incidence_no_and_rates)) + 
   geom_col() + 
   theme(axis.text.x = element_text(angle = 35, hjust = 0.9)) + 
-  labs(title = "Crude Rate of Brain and CNS Tumours", subtitle = "2017") + 
+  labs(title = "Crude Rate of Brain and CNS Tumour Incidence", subtitle = "2010") + 
   xlab("Health Board") + 
   ylab("Crude Rate") + 
   theme(
   plot.title = title.theme, 
   plot.subtitle = subtitle.theme, 
   axis.title = x.axis.theme) 
+```
+
+```{r}
+ggsave("crude_rate_by_area_in_2010.png", last_plot()) 
+```
+
+```{r}
+updated_cancer_incidences %>% 
+  filter(site_label == "All brain and CNS tumours (malignant and non-malignant)") %>% 
+  filter(sex_label == "All Persons") %>% 
+  filter(age_label == "Crude Rate (Incidence)") %>% 
+  filter(hb_label != "SCOTLAND") %>% 
+  filter(hb_label != "North of Scotland") %>% 
+  filter(hb_label != "South East of Scotland") %>% 
+  filter(hb_label != "West of Scotland") %>% 
+  filter(year == 2000) %>% 
+  ggplot(aes(hb_label, incidence_no_and_rates)) + 
+  geom_col() + 
+  labs(title = "Crude Rate of Brain and CNS Tumour Incidences", subtitle = "2000") + 
+  xlab("Health Board") + 
+  ylab("Crude Rate of Diagnosis") + 
+  theme(axis.text.x = element_text(angle = 35, hjust = 0.9)) + 
+  theme(
+  plot.title = title.theme, 
+  plot.subtitle = subtitle.theme, 
+  axis.title = x.axis.theme) 
+```
+
+```{r}
+ggsave("crude_rate_by_area_in_2000.png", last_plot()) 
 ```
 
 
@@ -287,15 +381,23 @@ joined %>%
   ggplot(aes(years_since_diagnosis, net_survival_percent, fill = cancer_site_grouping)) + 
   geom_bar(stat= "identity", position = "dodge") + 
   facet_wrap(~ calendar_period_of_diagnosis) + 
-  labs(title = "Brain and CNS Tumour and Leukaemia Net Survival over 2008-2012 and 2013-2017 (Male)", 
+  labs(title = "Brain and CNS Tumour and Leukaemia Net Survival (Male)", 
        subtitle = "Estimated probablity of survival for 1 year and 5 years after diagnosis") + 
   xlab("Years Since Diagnosis") + 
   ylab("Net Survival (%)") + 
   theme(
   plot.title = title.theme, 
   plot.subtitle = subtitle.theme, 
-  axis.title = x.axis.theme) 
+  axis.title = x.axis.theme) + 
+  guides(fill = guide_legend(title = "Cancer Site")) + 
+  scale_y_continuous(breaks = seq(0, 100, by = 5)) + 
+  scale_fill_manual(values = c("palevioletred4", "cadetblue3")) 
 ```
+
+```{r}
+ggsave("survival_male.png", last_plot()) 
+```
+
 
 ```{r}
 #Net survival of females aged from 15 to 99 at 1 and 5 years after the diagnosis. 
@@ -311,7 +413,7 @@ joined %>%
   ggplot(aes(years_since_diagnosis, net_survival_percent, fill = cancer_site_grouping)) + 
   geom_bar(stat= "identity", position = "dodge") + 
   facet_wrap(~ calendar_period_of_diagnosis) + 
-  labs(title = "Brain and CNS Tumour Net Survival over 2008-2012 and 2013-2017 (Female)", 
+  labs(title = "Brain and CNS Tumour Net Survival (Female)", 
        subtitle = "Estimated probablity of survival for 1 year and 5 years after diagnosis") + 
   xlab("Years Since Diagnosis") + 
   ylab("Net Survival (%)") + 
@@ -319,8 +421,16 @@ joined %>%
   theme(
   plot.title = title.theme, 
   plot.subtitle = subtitle.theme, 
-  axis.title = x.axis.theme) 
+  axis.title = x.axis.theme) + 
+  guides(fill = guide_legend(title = "Cancer Site")) + 
+  scale_fill_manual(values = c("palevioletred4", "cadetblue3")) 
 ```
+
+```{r}
+ggsave("survival_female.png", last_plot()) 
+```
+
+
 There was missing data in the 10 year survival rates of brain tumours, 
 however there is data for the number of deaths within 10 years of a diagnosis 
 of brain cancer. The number of deaths decreased slightly in the 2013-2017 
@@ -354,6 +464,19 @@ survival_data %>%
 2720 / 3486	* 100 
 ```
 
+```{r}
+#Deaths across calendar periods 
+survival_data %>% 
+  select(sex, age_group, years_since_diagnosis, deaths_within_10_years, calendar_period_of_diagnosis) %>% 
+  filter(years_since_diagnosis == 1) %>% 
+  filter(calendar_period_of_diagnosis == "2008-2012" 
+         | calendar_period_of_diagnosis ==  "2013-2017") %>% 
+  filter(age_group == "15-44" | age_group == "45-54" | age_group == "55-64" | 
+          age_group == "65-74" | age_group == "75-99") %>% 
+  group_by(calendar_period_of_diagnosis) %>% 
+  summarise(total = sum(deaths_within_10_years))
+```
+
 
 ```{r}
 #Deaths within 10 years 
@@ -374,8 +497,15 @@ survival_data %>%
   plot.title = title.theme, 
   plot.subtitle = subtitle.theme, 
   axis.title = x.axis.theme) + 
-  scale_fill_brewer(palette = "Paired")   
+  guides(fill = guide_legend(title = "Age Group")) + 
+  scale_fill_manual(values = c("slategray1", "slategray2", "slategray3", 
+                                "slategray4", "gray29")) 
 ```
+
+```{r}
+ggsave("years_mortality.png", last_plot())  
+```
+
 
 # Mortality 
 
@@ -467,8 +597,15 @@ simd %>%
   theme(
   plot.title = title.theme, 
   plot.subtitle = subtitle.theme, 
-  axis.title = x.axis.theme) 
+  axis.title = x.axis.theme) + 
+   scale_fill_manual(values = c("slategray1", "slategray2", "slategray3", 
+                                "slategray4", "gray29")) 
 ```
+
+```{r}
+ggsave("deprivation_mortality.png", last_plot())  
+```
+
 
 # Patient Experiences 
 
@@ -485,8 +622,8 @@ library(reshape2)
 post_surgery_experience_2018 %>% 
   pivot_longer(cols = c(proportion_of_patients_die_within_30_days_of_surgery, proportion_of_patients_imaging_within_72_hours), names_to = "surgery_aftermaths", 
                values_to = "proportion") %>% 
-  mutate(surgery_aftermaths = recode(surgery_aftermaths, "proportion_of_patients_die_within_30_days_of_surgery" = "Percentage of patients dying within 30 days", 
-"proportion_of_patients_imaging_within_72_hours" = "Percentage of patients recieving brain imaging within 30 days")) %>% 
+  mutate(surgery_aftermaths = recode(surgery_aftermaths, "proportion_of_patients_die_within_30_days_of_surgery" = "Patients dying within 30 days", 
+"proportion_of_patients_imaging_within_72_hours" = "Patients recieving brain imaging within 3 days")) %>% 
   ggplot(aes(location, proportion, fill = surgery_aftermaths)) + 
   geom_bar(stat= "identity", position = "dodge") + 
   guides(fill = guide_legend(title = "Surgery Aftermath")) + 
@@ -497,6 +634,11 @@ post_surgery_experience_2018 %>%
   theme(
   plot.title = title.theme, 
   plot.subtitle = subtitle.theme, 
-  axis.title = x.axis.theme) 
+  axis.title = x.axis.theme) + 
+  scale_fill_manual(values = c("palevioletred4", "cadetblue3")) 
+```
+
+```{r}
+ggsave("surgery_aftermath.png", last_plot()) 
 ```
 
