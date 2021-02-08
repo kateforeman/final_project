@@ -11,3 +11,5 @@ The data came from a variety of open sources including Public Health Scotland, N
 ### The Analysis 
 
 I chose to focus on four main areas for my analysis: incidences of brain tumours (both malignant brain tumour incidences and a combination of malignant and non-malignant brain tumours), survival rates (compared to leukaemia survival), mortality (deaths within 10 years of a diagnosis) and patient experiences after surgery. The analysis was typically producing easy to read and clearly documented graphs, calculating informative percentages and identifying any trends in the data. 
+
+![Screenshot](analysis.png) 
