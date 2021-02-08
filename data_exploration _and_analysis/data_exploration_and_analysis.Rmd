@@ -635,7 +635,8 @@ post_surgery_experience_2018 %>%
   plot.title = title.theme, 
   plot.subtitle = subtitle.theme, 
   axis.title = x.axis.theme) + 
-  scale_fill_manual(values = c("palevioletred4", "cadetblue3")) 
+  scale_fill_manual(values = c("palevioletred4", "cadetblue3")) + 
+  theme(axis.text.x = element_text(angle = 35, hjust = 0.9)) 
 ```
 
 ```{r}
