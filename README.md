@@ -6,3 +6,8 @@ I was given a charity brief with some specified areas of interest to explore and
 
 ### The data 
 
+The data came from a variety of open sources including Public Health Scotland, NHS audits and National Records of Scotland. The data was all in xlsx format and I saved them as CSVs to export the data into RStudio. The cleaning script can be found on the github repo. Cleaning was relatively simple, mostly a case of pivoting the data into a long format, extracting relevant character strings from the columns and renaming variables.  
+
+### The Analysis 
+
+I chose to focus on four main areas for my analysis: incidences of brain tumours (both malignant brain tumour incidences and a combination of malignant and non-malignant brain tumours), survival rates (compared to leukaemia survival), mortality (deaths within 10 years of a diagnosis) and patient experiences after surgery. The analysis was typically producing easy to read and clearly documented graphs, calculating informative percentages and identifying any trends in the data. 
